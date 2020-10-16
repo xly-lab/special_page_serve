@@ -20,23 +20,21 @@ function createToken(user) {
         username
     }, SECRET, {
         // 过期时间7天
-        'expiresIn': 60 * 60 * 24 * 7
+        'expiresIn': 60 * 60 * 24 * 7//60 * 60 * 24 * 7
     })
     return token
 }
 
 // 验证token
-function verifyToken(header) {
+function verifyToken(token) {
     let promise = new Promise((resolve, reject) => {
-        let token = header['authorization']
         if (!token) {
-            reject(false)
+            resolve(false)
         }
         jwt.verify(token, SECRET, (error, result) => {
-            if (error) {
-                reject(false)
+            if (error&&error.name=='TokenExpiredError') {
+                resolve(false)
             } else {
-                // console.log(result)
                 resolve(true)
             }
         })

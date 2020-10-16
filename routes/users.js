@@ -8,7 +8,6 @@ router.prefix('/users')
 router.get('/', function (ctx, next) {
   ctx.body = 'this is a users response!'
 })
-
 router.get('/bar', function (ctx, next) {
   ctx.body = 'this is a users/bar response'
 })
@@ -36,11 +35,16 @@ router.post('/login',async(ctx,next)=>{
         }
       }else{
         const Token = createToken({username})
+        let sql_word = `select * from user_x where username = '${username}' and password = '${password}';`
+        let result = await allServices.query(sql_word);
+        console.log(result[0])
+        const {only_id,phone_number,avatar,register_time,user_type,register_type,password_type} = result[0]
+        let _username = result[0].username
         return ctx.body = {
           code:2000,
           msg:'登录成功',
           login_status:'success',
-          Token
+          Token,only_id,username:_username,phone_number,avatar,register_time,user_type,register_type,password_type
         }
       }
     }
@@ -61,14 +65,19 @@ router.post('/login',async(ctx,next)=>{
           register_status:'fail'
         }
       }
-      let sql_centence = "SELECT username from user_x WHERE phone_number = '18380127515'"
+      let sql_centence = `SELECT username from user_x WHERE phone_number = '${phone_number}';`
       let result = await allServices.query(sql_centence)
+      let sql_centence_1 = `select * from user_x where phone_number = '${phone_number}';`
+      let result1 = await allServices.query(sql_centence_1)
+      const {only_id,phone_number,avatar,register_time,user_type,register_type,password_type} = result1[0];
+      let _username = result[0].username
       const Token = createToken({username:result[0].username})
       return ctx.body = {
         code:2004,
         msg:'手机登录成功',
         login_status:'success',
-        Token
+        Token,
+        only_id,username:_username,phone_number,avatar,register_time,user_type,register_type,password_type
       }
     }
   }
@@ -78,7 +87,6 @@ router.post('/login',async(ctx,next)=>{
 router.post('/register',async (ctx,next)=>{
   console.log(ctx.request.body)
   const {username,password,phone_number,phone_code} = ctx.request.body
-  console.log(phone_number)
   if(!phone_number&&username){//用户密码注册
     let register_time = Date.now(),only_id=processID();
     let sql_word_find = `select count(*) as user_count from user_x where username = '${username}' ;`
@@ -126,7 +134,8 @@ router.post('/register',async (ctx,next)=>{
       return ctx.body = {
         code:2003,
         msg:'注册成功',
-        login_status:'success'
+        login_status:'success',
+        register_time,_randomUserName,phone_number,only_id,user_type:1,password_type:'N',register_type:'P',
       }
     }
   }
@@ -199,6 +208,35 @@ router.post('/change_password',async (ctx ,next) => {
   let updateResult = allServices.query(sql_update);
   console.log(updateResult);
 })
-
+//验证用户登录并获取用户信息
+router.get('/verify_userInfo',async (ctx,next)=>{
+  console.log(ctx.query)
+  const {only_id} = ctx.query
+  if(only_id=='null'){
+    return ctx.body = {
+      code:4041,
+      msg:'未接收到only_id',
+      verify_status:false
+    }
+  }
+  let sql  = `select * from user_x where only_id = '${only_id}';`
+  let result = await allServices.query(sql);
+  console.log('result',result)
+  if(result.length == 0){
+    return ctx.body = {
+      code:4042,
+      msg:'未查询到该用户',
+      verify_status:false
+    }
+  }
+  const {username,phone_number,avatar,register_time,user_type,register_type,password_type} = result[0];
+  let _only_id = result[0].only_id
+  return ctx.body = {
+    code:2005,
+    msg:'token可用',
+    verify_status:true,
+    username,phone_number,avatar,register_time,user_type,register_type,password_type,only_id:_only_id,
+  }
+})
 
 module.exports = router
