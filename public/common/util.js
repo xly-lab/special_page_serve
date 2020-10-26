@@ -3,6 +3,8 @@ var md5 = require('blueimp-md5')
 var moment = require('moment')
 var Base64 = require('js-base64').Base64;
 var request = require('request');
+const fs = require('fs'); // 图片路径
+const path = require('path'); // 图片路径
 
 const processID = () => {
     const uuid = 'xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -133,4 +135,18 @@ function sendCode(phone, code) {
         });
     })
 }
-module.exports = { processID, createToken, verifyToken, randomUserName,sendCode,randomCode }
+
+// 新建文件，可以去百度fs模块
+const mkdirs = (dirname, callback)=> {
+    fs.stat(dirname, function(exists) {
+        if (exists) {
+            callback();
+        } else {
+            mkdirs(path.dirname(dirname), function() {
+                fs.mkdir(dirname, callback);
+            });
+        }
+    });
+};
+
+module.exports = { processID, createToken, verifyToken, randomUserName,sendCode,randomCode,mkdirs }

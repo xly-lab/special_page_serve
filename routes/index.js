@@ -15,5 +15,7 @@ router.get('/json', async (ctx, next) => {
     title: 'koa2 json'
   }
 })
+router.get('/public/images/userAvatar/:name',async (ctx,next) => {
+})
 
 module.exports = router
